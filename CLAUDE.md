@@ -71,3 +71,10 @@ v2 is ruthlessly scoped.
 - Don't commit google-services.json, .env files, or any keys
 - Don't write to package.json directly (use npm install)
 - Don't add features that are out of scope above, even if "it's just one more thing"
+
+## Branching workflow
+- main = tested working code only
+- Each day's work goes on a feature branch (e.g. day-2-navigation)
+- Do NOT commit directly to main
+- Do NOT merge to main until I (Tanish) test on my phone and approve
+- Always verify current branch with `git branch` before any work
