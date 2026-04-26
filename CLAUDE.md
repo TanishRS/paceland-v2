@@ -21,6 +21,11 @@ v2 is ruthlessly scoped.
 - Profile screen
 - Google Fit integration (Android only)
 
+## What's been built so far
+- Day 1: Auth screen (email/password signup + login), Firestore user document creation, AsyncStorage persistence — merged to main
+- Day 2: Bottom tab navigation (Home + Profile), Profile screen fetching user from Firestore, friendly auth error messages — merged to main
+- Day 3: Map screen with live GPS — IN PROGRESS on day-3-map branch
+
 ## Out of scope (do NOT build, even if seems easy)
 - Run clubs
 - Weekly challenges
@@ -54,7 +59,7 @@ v2 is ruthlessly scoped.
 - I read code but don't write it. Explain WHY before changes.
 - Show me a diff before applying any edit.
 - Tell me explicitly when I need to do manual steps (Firebase Console, EAS, USB phone connect).
-- 4-6 focused hours per day. Demo to Jai Daga sir in 14 days.
+- 4-6 focused hours per day. Demo to Jai Daga sir in 12 days (Day 3 of 14 today).
 - I commit to: understanding every file, testing each step in real life, ruthless scope.
 
 ## Code conventions
