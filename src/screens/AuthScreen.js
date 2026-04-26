@@ -20,6 +20,16 @@ import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 // Our initialised auth and db instances
 import { auth, db } from '../config/firebase';
 
+function getFriendlyError(err) {
+  switch (err.code) {
+    case 'auth/invalid-credential':   return 'Wrong email or password';
+    case 'auth/email-already-in-use': return 'An account with this email already exists';
+    case 'auth/weak-password':        return 'Password must be at least 6 characters';
+    case 'auth/invalid-email':        return 'Please enter a valid email';
+    default:                          return err.message;
+  }
+}
+
 export default function AuthScreen() {
   const [mode, setMode] = useState('login');       // 'login' | 'signup'
   const [email, setEmail] = useState('');
@@ -65,7 +75,7 @@ export default function AuthScreen() {
         }
       } catch (authErr) {
         console.log('AuthScreen: signup FAILED: ' + authErr.message);
-        setError(authErr.message);
+        setError(getFriendlyError(authErr));
       }
     } else {
       try {
@@ -73,7 +83,7 @@ export default function AuthScreen() {
         console.log('AuthScreen: login success uid=' + userCredential.user.uid);
       } catch (authErr) {
         console.log('AuthScreen: login FAILED: ' + authErr.message);
-        setError(authErr.message);
+        setError(getFriendlyError(authErr));
       }
     }
 

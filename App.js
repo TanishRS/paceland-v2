@@ -15,7 +15,7 @@ import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from './src/config/firebase';
 
 import AuthScreen from './src/screens/AuthScreen';
-import HomeScreen from './src/screens/HomeScreen';
+import AppTabs from './src/navigation/AppTabs';
 
 const Stack = createNativeStackNavigator();
 
@@ -55,7 +55,7 @@ export default function App() {
           // We pass user as a prop via an inline component wrapper because
           // Stack.Screen's `component` prop doesn't support passing extra props.
           <Stack.Screen name="Home">
-            {() => <HomeScreen user={user} />}
+            {() => <AppTabs user={user} />}
           </Stack.Screen>
         ) : (
           // When user is null, the only screen in the stack is Auth.

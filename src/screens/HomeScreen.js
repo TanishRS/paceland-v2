@@ -1,28 +1,32 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 
-// signOut ends the Firebase Auth session, which triggers onAuthStateChanged
-// in App.js to fire with null — that's what switches the screen back to Auth.
-import { signOut } from 'firebase/auth';
-import { auth } from '../config/firebase';
-
-// user is passed in as a prop from App.js (which gets it from onAuthStateChanged)
 export default function HomeScreen({ user }) {
-  const handleSignOut = async () => {
-    try {
-      await signOut(auth);
-      console.log('HomeScreen: signed out');
-    } catch (err) {
-      console.log('HomeScreen: sign out FAILED: ' + err.message);
-    }
-  };
+  const namePart = user?.email?.split('@')[0] ?? 'Runner';
+  console.log('HomeScreen: rendered for user ' + user?.email);
 
   return (
     <View style={styles.container}>
-      <Text style={styles.welcome}>Welcome, {user?.email}</Text>
-      <TouchableOpacity style={styles.button} onPress={handleSignOut}>
-        <Text style={styles.buttonText}>Sign Out</Text>
+      <Text style={styles.heading}>Welcome back, {namePart}</Text>
+
+      <View style={styles.statsRow}>
+        <StatCard label="Territories" value="0" />
+        <StatCard label="Total km"    value="0" />
+        <StatCard label="Total Runs"  value="0" />
+      </View>
+
+      <TouchableOpacity style={styles.startButton}>
+        <Text style={styles.startButtonText}>Start Running</Text>
       </TouchableOpacity>
+    </View>
+  );
+}
+
+function StatCard({ label, value }) {
+  return (
+    <View style={styles.card}>
+      <Text style={styles.cardValue}>{value}</Text>
+      <Text style={styles.cardLabel}>{label}</Text>
     </View>
   );
 }
@@ -30,23 +34,49 @@ export default function HomeScreen({ user }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
     backgroundColor: '#fff',
+    paddingHorizontal: 24,
+    paddingTop: 60,
   },
-  welcome: {
-    fontSize: 18,
+  heading: {
+    fontSize: 24,
+    fontWeight: 'bold',
     marginBottom: 32,
   },
-  button: {
-    backgroundColor: '#e84040',
-    padding: 14,
-    borderRadius: 8,
-    paddingHorizontal: 32,
+  statsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 40,
   },
-  buttonText: {
+  card: {
+    flex: 1,
+    marginHorizontal: 4,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    borderRadius: 12,
+    paddingVertical: 16,
+    alignItems: 'center',
+  },
+  cardValue: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#1a73e8',
+  },
+  cardLabel: {
+    fontSize: 12,
+    color: '#555',
+    marginTop: 4,
+    textAlign: 'center',
+  },
+  startButton: {
+    backgroundColor: '#1a73e8',
+    padding: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  startButtonText: {
     color: '#fff',
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: '600',
   },
 });
