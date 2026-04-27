@@ -2,6 +2,7 @@ import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Text } from 'react-native';
 import HomeScreen from '../screens/HomeScreen';
+import MapScreen from '../screens/MapScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 
 const Tab = createBottomTabNavigator();
@@ -21,6 +22,12 @@ export default function AppTabs({ user }) {
       >
         {() => <HomeScreen user={user} />}
       </Tab.Screen>
+
+      <Tab.Screen
+        name="Map"
+        component={MapScreen}
+        options={{ tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 20 }}>🗺️</Text> }}
+      />
 
       <Tab.Screen
         name="Profile"
