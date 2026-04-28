@@ -46,6 +46,7 @@ export default function useGpsTracking() {
           distanceInterval: 5,
         },
         (pos) => {
+          console.log("[PACE-DEBUG] hook fired", { lat: pos.coords.latitude, lng: pos.coords.longitude });
           if (!cancelled) {
             setLocation({
               lat: pos.coords.latitude,

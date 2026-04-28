@@ -27,17 +27,35 @@ export default function MapScreen() {
   const lastPointRef  = useRef(null);
   const timerRef      = useRef(null);
   const startTimeRef  = useRef(null);
+  const mapRef            = useRef(null);
+  const hasInitializedRef = useRef(false);
 
   useEffect(() => {
+    console.log("[PACE-DEBUG] effect fired", { isTracking, hasLocation: !!location, currentRunPathLen: runPath.length });
     if (!isTracking || !location) return;
+    console.log("[PACE-DEBUG] adding point to runPath");
     setRunPath((prev) => [...prev, { lat: location.lat, lng: location.lng, t: Date.now() }]);
     if (lastPointRef.current) {
-      setDistanceMeters((d) => d + haversineMeters(lastPointRef.current, location));
+      console.log("[PACE-DEBUG] computing haversine", { from: lastPointRef.current, to: location });
+      const segmentDistance = haversineMeters(lastPointRef.current, location); // extracted for logging only
+      console.log("[PACE-DEBUG] segment meters:", segmentDistance);
+      setDistanceMeters((d) => d + segmentDistance);
     }
     lastPointRef.current = location;
   }, [location, isTracking]);
 
   useEffect(() => () => clearInterval(timerRef.current), []);
+
+  useEffect(() => {
+    if (!location || !mapRef.current) return;
+    if (!hasInitializedRef.current || isTracking) {
+      hasInitializedRef.current = true;
+      mapRef.current.animateToRegion(
+        { latitude: location.lat, longitude: location.lng, latitudeDelta: 0.005, longitudeDelta: 0.005 },
+        500,
+      );
+    }
+  }, [location, isTracking]);
 
   function startRun() {
     lastPointRef.current = location;
@@ -50,6 +68,7 @@ export default function MapScreen() {
   }
 
   function stopRun() {
+    console.log("[PACE-DEBUG] stopRun snapshot", { runPathLen: runPath.length, distanceMeters, elapsedMs });
     clearInterval(timerRef.current);
     timerRef.current = null;
     saveRun();
@@ -65,6 +84,7 @@ export default function MapScreen() {
   }
 
   async function saveRun() {
+    console.log("[PACE-DEBUG] saveRun called", { runPathLen: runPath.length, distanceMeters });
     if (runPath.length < 2 || distanceMeters < 10) {
       Alert.alert('Run too short to save');
       resetRunState();
@@ -119,8 +139,8 @@ export default function MapScreen() {
       <MapView
         style={styles.map}
         provider={PROVIDER_GOOGLE}
+        ref={mapRef}
         showsUserLocation={true}
-        followsUserLocation={true}
         initialRegion={{
           latitude: location.lat,
           longitude: location.lng,
