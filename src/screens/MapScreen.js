@@ -49,14 +49,10 @@ export default function MapScreen() {
   const hasInitializedRef = useRef(false);
 
   useEffect(() => {
-    console.log("[PACE-DEBUG] effect fired", { isTracking, hasLocation: !!location, currentRunPathLen: runPath.length });
     if (!isTracking || !location) return;
-    console.log("[PACE-DEBUG] adding point to runPath");
     setRunPath((prev) => [...prev, { lat: location.lat, lng: location.lng, t: Date.now() }]);
     if (lastPointRef.current) {
-      console.log("[PACE-DEBUG] computing haversine", { from: lastPointRef.current, to: location });
-      const segmentDistance = haversineMeters(lastPointRef.current, location); // extracted for logging only
-      console.log("[PACE-DEBUG] segment meters:", segmentDistance);
+      const segmentDistance = haversineMeters(lastPointRef.current, location);
       setDistanceMeters((d) => d + segmentDistance);
     }
     lastPointRef.current = location;
@@ -97,7 +93,6 @@ export default function MapScreen() {
   }
 
   function stopRun() {
-    console.log("[PACE-DEBUG] stopRun snapshot", { runPathLen: runPath.length, distanceMeters, elapsedMs });
     clearInterval(timerRef.current);
     timerRef.current = null;
     saveRun();
@@ -113,13 +108,13 @@ export default function MapScreen() {
   }
 
   async function saveRun() {
-    console.log("[PACE-DEBUG] saveRun called", { runPathLen: runPath.length, distanceMeters });
     if (runPath.length < 2 || distanceMeters < 10) {
       Alert.alert('Run too short to save');
       resetRunState();
       return;
     }
     const paceSecPerKm = (elapsedMs / 1000) / (distanceMeters / 1000);
+    const userRef = doc(db, 'users', auth.currentUser.uid);
     try {
       await addDoc(collection(db, 'runs'), {
         userId: auth.currentUser.uid,
@@ -129,6 +124,14 @@ export default function MapScreen() {
         path: runPath,
         createdAt: serverTimestamp(),
       });
+      try {
+        await updateDoc(userRef, {
+          kmCovered: increment(distanceMeters / 1000),
+          totalRuns: increment(1),
+        });
+      } catch (e) {
+        console.warn('Failed to update user counters:', e);
+      }
       const first = runPath[0];
       const last = runPath[runPath.length - 1];
       if (haversineMeters(first, last) <= 20 && runPath.length >= 3 && distanceMeters >= 100) {
@@ -140,7 +143,7 @@ export default function MapScreen() {
             area,
             createdAt: serverTimestamp(),
           });
-          await updateDoc(doc(db, 'users', auth.currentUser.uid), {
+          await updateDoc(userRef, {
             territories: increment(1),
           });
           Alert.alert(`Run saved! Territory claimed (${Math.round(area)} m²)`);
