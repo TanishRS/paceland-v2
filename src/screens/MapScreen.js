@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, ActivityIndicator, StyleSheet, TouchableOpacity, Alert } from 'react-native';
-import MapView, { PROVIDER_GOOGLE, Polyline } from 'react-native-maps';
+import MapView, { PROVIDER_GOOGLE, Polyline, Polygon } from 'react-native-maps';
 import useGpsTracking from '../hooks/useGpsTracking';
-import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { addDoc, collection, serverTimestamp, updateDoc, doc, query, where, onSnapshot, increment } from 'firebase/firestore';
 import { auth, db } from '../config/firebase';
 
 function haversineMeters(a, b) {
@@ -17,12 +17,30 @@ function haversineMeters(a, b) {
   return R * 2 * Math.atan2(Math.sqrt(chord), Math.sqrt(1 - chord));
 }
 
+function polygonAreaMeters(points) {
+  if (points.length < 3) return 0;
+  const lat0 = points.reduce((s, p) => s + p.lat, 0) / points.length;
+  const cosLat = Math.cos((lat0 * Math.PI) / 180);
+  const R = 6371000;
+  const xy = points.map(p => ({
+    x: ((p.lng * Math.PI) / 180) * R * cosLat,
+    y: ((p.lat * Math.PI) / 180) * R,
+  }));
+  let area = 0;
+  for (let i = 0; i < xy.length; i++) {
+    const j = (i + 1) % xy.length;
+    area += xy[i].x * xy[j].y - xy[j].x * xy[i].y;
+  }
+  return Math.abs(area / 2);
+}
+
 export default function MapScreen() {
   const { location, error } = useGpsTracking();
   const [isTracking, setIsTracking]         = useState(false);
   const [runPath, setRunPath]               = useState([]);
   const [distanceMeters, setDistanceMeters] = useState(0);
   const [elapsedMs, setElapsedMs]           = useState(0);
+  const [territories, setTerritories]       = useState([]);
 
   const lastPointRef  = useRef(null);
   const timerRef      = useRef(null);
@@ -56,6 +74,17 @@ export default function MapScreen() {
       );
     }
   }, [location, isTracking]);
+
+  useEffect(() => {
+    const q = query(
+      collection(db, 'territories'),
+      where('userId', '==', auth.currentUser.uid),
+    );
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      setTerritories(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
+    });
+    return unsubscribe;
+  }, []);
 
   function startRun() {
     lastPointRef.current = location;
@@ -100,7 +129,28 @@ export default function MapScreen() {
         path: runPath,
         createdAt: serverTimestamp(),
       });
-      Alert.alert('Run saved!');
+      const first = runPath[0];
+      const last = runPath[runPath.length - 1];
+      if (haversineMeters(first, last) <= 20 && runPath.length >= 3 && distanceMeters >= 100) {
+        try {
+          const area = polygonAreaMeters(runPath);
+          await addDoc(collection(db, 'territories'), {
+            userId: auth.currentUser.uid,
+            polygon: runPath.map(p => ({ lat: p.lat, lng: p.lng })),
+            area,
+            createdAt: serverTimestamp(),
+          });
+          await updateDoc(doc(db, 'users', auth.currentUser.uid), {
+            territories: increment(1),
+          });
+          Alert.alert(`Run saved! Territory claimed (${Math.round(area)} m²)`);
+        } catch (e) {
+          console.error(e);
+          Alert.alert('Run saved, but territory claim failed.');
+        }
+      } else {
+        Alert.alert('Run saved!');
+      }
       resetRunState();
     } catch (e) {
       console.error(e);
@@ -151,6 +201,15 @@ export default function MapScreen() {
         {polylineCoords.length > 1 && (
           <Polyline coordinates={polylineCoords} strokeColor="#1a73e8" strokeWidth={4} />
         )}
+        {territories.map(t => (
+          <Polygon
+            key={t.id}
+            coordinates={t.polygon.map(p => ({ latitude: p.lat, longitude: p.lng }))}
+            fillColor="rgba(76, 175, 80, 0.3)"
+            strokeColor="rgba(76, 175, 80, 0.8)"
+            strokeWidth={2}
+          />
+        ))}
       </MapView>
 
       <View style={styles.statsOverlay}>
