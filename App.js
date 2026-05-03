@@ -54,7 +54,7 @@ export default function App() {
           // When user is set, the only screen in the stack is Home.
           // We pass user as a prop via an inline component wrapper because
           // Stack.Screen's `component` prop doesn't support passing extra props.
-          <Stack.Screen name="Home">
+          <Stack.Screen name="Main">
             {() => <AppTabs user={user} />}
           </Stack.Screen>
         ) : (
