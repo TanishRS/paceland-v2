@@ -41,6 +41,7 @@ export default function MapScreen() {
   const [distanceMeters, setDistanceMeters] = useState(0);
   const [elapsedMs, setElapsedMs]           = useState(0);
   const [territories, setTerritories]       = useState([]);
+  const [otherTerritories, setOtherTerritories] = useState([]);
 
   const lastPointRef  = useRef(null);
   const timerRef      = useRef(null);
@@ -78,6 +79,17 @@ export default function MapScreen() {
     );
     const unsubscribe = onSnapshot(q, (snapshot) => {
       setTerritories(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
+    });
+    return unsubscribe;
+  }, []);
+
+  useEffect(() => {
+    const q = query(
+      collection(db, 'territories'),
+      where('userId', '!=', auth.currentUser.uid),
+    );
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      setOtherTerritories(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
     });
     return unsubscribe;
   }, []);
@@ -210,6 +222,15 @@ export default function MapScreen() {
             coordinates={t.polygon.map(p => ({ latitude: p.lat, longitude: p.lng }))}
             fillColor="rgba(76, 175, 80, 0.3)"
             strokeColor="rgba(76, 175, 80, 0.8)"
+            strokeWidth={2}
+          />
+        ))}
+        {otherTerritories.map(t => (
+          <Polygon
+            key={t.id}
+            coordinates={t.polygon.map(p => ({ latitude: p.lat, longitude: p.lng }))}
+            fillColor="rgba(229, 57, 53, 0.25)"
+            strokeColor="#E53935"
             strokeWidth={2}
           />
         ))}
