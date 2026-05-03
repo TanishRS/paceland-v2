@@ -2,8 +2,10 @@ import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, ActivityIndicator, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import MapView, { PROVIDER_GOOGLE, Polyline, Polygon } from 'react-native-maps';
 import useGpsTracking from '../hooks/useGpsTracking';
-import { addDoc, collection, serverTimestamp, updateDoc, doc, query, where, onSnapshot, increment } from 'firebase/firestore';
+import { addDoc, collection, serverTimestamp, updateDoc, doc, query, where, onSnapshot, increment, writeBatch, deleteDoc } from 'firebase/firestore';
 import { auth, db } from '../config/firebase';
+import booleanIntersects from '@turf/boolean-intersects';
+import { polygon } from '@turf/helpers';
 
 function haversineMeters(a, b) {
   const R = 6371000;
@@ -32,6 +34,16 @@ function polygonAreaMeters(points) {
     area += xy[i].x * xy[j].y - xy[j].x * xy[i].y;
   }
   return Math.abs(area / 2);
+}
+
+function toTurfPolygon(latLngArray) {
+  const ring = latLngArray.map(p => [p.lng, p.lat]);
+  const first = ring[0];
+  const last = ring[ring.length - 1];
+  if (first[0] !== last[0] || first[1] !== last[1]) {
+    ring.push([first[0], first[1]]);
+  }
+  return polygon([ring]);
 }
 
 export default function MapScreen() {
@@ -158,7 +170,38 @@ export default function MapScreen() {
           await updateDoc(userRef, {
             territories: increment(1),
           });
-          Alert.alert(`Run saved! Territory claimed (${Math.round(area)} m²)`);
+          const newPoly = toTurfPolygon(runPath.map(p => ({ lat: p.lat, lng: p.lng })));
+          const stolenList = [];
+          for (const other of otherTerritories) {
+            try {
+              const otherPoly = toTurfPolygon(other.polygon);
+              if (booleanIntersects(newPoly, otherPoly)) {
+                stolenList.push({ id: other.id, ownerId: other.userId, area: other.area });
+              }
+            } catch (e) {
+              console.warn('Intersection check failed for territory', other.id, e);
+            }
+          }
+          let stolenCount = 0;
+          let stolenArea = 0;
+          if (stolenList.length > 0) {
+            try {
+              const batch = writeBatch(db);
+              for (const entry of stolenList) {
+                batch.delete(doc(db, 'territories', entry.id));
+                batch.update(doc(db, 'users', entry.ownerId), { territories: increment(-1) });
+              }
+              await batch.commit();
+              stolenCount = stolenList.length;
+              stolenArea = Math.round(stolenList.reduce((sum, e) => sum + (e.area || 0), 0));
+            } catch (e) {
+              console.error('Steal batch failed:', e);
+            }
+          }
+          const claimMsg = stolenCount > 0
+            ? `Run saved! Territory claimed (${Math.round(area)} m²)\n🔥 You stole ${stolenCount} ${stolenCount === 1 ? 'territory' : 'territories'} (${stolenArea} m²)!`
+            : `Run saved! Territory claimed (${Math.round(area)} m²)`;
+          Alert.alert(claimMsg);
         } catch (e) {
           console.error(e);
           Alert.alert('Run saved, but territory claim failed.');
