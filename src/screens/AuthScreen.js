@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
+  StatusBar,
 } from 'react-native';
 
 // Firebase Auth functions — modular SDK (never the compat layer)
@@ -97,12 +98,14 @@ export default function AuthScreen() {
 
   return (
     <View style={styles.container}>
+      <StatusBar barStyle="light-content" backgroundColor="#0A0A0A" />
       <Text style={styles.title}>Paceland</Text>
-      <Text style={styles.subtitle}>{mode === 'login' ? 'Log In' : 'Sign Up'}</Text>
+      <Text style={styles.tagline}>Your Pace. Your Land.</Text>
 
       <TextInput
         style={styles.input}
         placeholder="Email"
+        placeholderTextColor="#6B7280"
         autoCapitalize="none"
         keyboardType="email-address"
         value={email}
@@ -112,6 +115,7 @@ export default function AuthScreen() {
       <TextInput
         style={styles.input}
         placeholder="Password"
+        placeholderTextColor="#6B7280"
         secureTextEntry
         value={password}
         onChangeText={setPassword}
@@ -128,9 +132,10 @@ export default function AuthScreen() {
       </TouchableOpacity>
 
       <TouchableOpacity onPress={toggleMode} style={styles.toggleButton}>
-        <Text style={styles.toggleText}>
-          {mode === 'login' ? "Don't have an account? Sign Up" : 'Already have an account? Log In'}
-        </Text>
+        {mode === 'login'
+          ? <Text style={styles.toggleLabel}>Don't have an account? <Text style={styles.toggleLink}>Sign Up</Text></Text>
+          : <Text style={styles.toggleLabel}>Already have an account? <Text style={styles.toggleLink}>Log In</Text></Text>
+        }
       </TouchableOpacity>
     </View>
   );
@@ -141,27 +146,34 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     paddingHorizontal: 24,
-    backgroundColor: '#fff',
+    backgroundColor: '#0A0A0A',
   },
   title: {
     fontSize: 32,
     fontWeight: 'bold',
     textAlign: 'center',
     marginBottom: 4,
+    color: '#FFFFFF',
   },
-  subtitle: {
-    fontSize: 18,
+  tagline: {
+    color: '#9CA3AF',
+    fontSize: 16,
+    fontWeight: '400',
+    letterSpacing: 0.5,
+    marginTop: 8,
+    marginBottom: 48,
     textAlign: 'center',
-    color: '#555',
-    marginBottom: 32,
   },
   input: {
+    backgroundColor: 'transparent',
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: '#374151',
     borderRadius: 8,
-    padding: 12,
-    marginBottom: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    marginBottom: 12,
     fontSize: 16,
+    color: '#FFFFFF',
   },
   error: {
     color: 'red',
@@ -169,22 +181,28 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   button: {
-    backgroundColor: '#1a73e8',
-    padding: 14,
+    backgroundColor: '#0F766E',
+    paddingVertical: 16,
     borderRadius: 8,
     alignItems: 'center',
-    marginBottom: 16,
+    marginTop: 12,
   },
   buttonText: {
-    color: '#fff',
+    color: '#FFFFFF',
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '700',
   },
   toggleButton: {
     alignItems: 'center',
+    marginTop: 24,
   },
-  toggleText: {
-    color: '#1a73e8',
+  toggleLabel: {
+    color: '#9CA3AF',
     fontSize: 14,
+  },
+  toggleLink: {
+    color: '#0F766E',
+    fontSize: 14,
+    fontWeight: '600',
   },
 });
