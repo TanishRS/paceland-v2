@@ -1,6 +1,6 @@
 export default () => ({
   expo: {
-    name: "PacelandApp",
+    name: "Paceland",
     slug: "PacelandApp",
     version: "1.0.0",
     orientation: "portrait",
