@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, Text, FlatList, ActivityIndicator, StyleSheet, StatusBar } from 'react-native';
 import { collection, onSnapshot, query, orderBy, limit } from 'firebase/firestore';
 import { db, auth } from '../config/firebase';
 
@@ -33,7 +33,7 @@ export default function LeaderboardScreen() {
   if (loading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#1a73e8" />
+        <ActivityIndicator size="large" color="#FFFFFF" />
       </View>
     );
   }
@@ -56,6 +56,7 @@ export default function LeaderboardScreen() {
 
   return (
     <View style={styles.container}>
+      <StatusBar barStyle="light-content" backgroundColor="#0A0A0A" />
       <Text style={styles.heading}>Leaderboard</Text>
       <FlatList
         data={users}
@@ -65,7 +66,7 @@ export default function LeaderboardScreen() {
           return (
             <View style={styles.row}>
               <Text style={styles.rank}>{index + 1}</Text>
-              <Text style={styles.name} numberOfLines={1}>{item.name || item.email}</Text>
+              <Text style={styles.name} numberOfLines={1} ellipsizeMode="tail">{item.name || item.email}</Text>
               {isMe && (
                 <View style={styles.badge}>
                   <Text style={styles.badgeText}>YOU</Text>
@@ -86,19 +87,21 @@ export default function LeaderboardScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
-    paddingHorizontal: 24,
-    paddingTop: 60,
+    backgroundColor: '#0A0A0A',
   },
   heading: {
-    fontSize: 24,
+    fontSize: 32,
     fontWeight: 'bold',
-    marginBottom: 16,
+    color: '#FFFFFF',
+    paddingTop: 24,
+    paddingHorizontal: 24,
+    paddingBottom: 16,
   },
   centered: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: '#0A0A0A',
   },
   errorText: {
     color: '#d32f2f',
@@ -108,51 +111,56 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 14,
-    color: '#555',
+    color: '#9CA3AF',
     textAlign: 'center',
     paddingHorizontal: 32,
   },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 12,
+    paddingHorizontal: 24,
+    paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    borderBottomColor: '#1F2937',
   },
   rank: {
-    width: 32,
-    fontSize: 14,
-    color: '#888',
+    minWidth: 32,
+    marginRight: 12,
+    fontSize: 18,
+    color: '#FFFFFF',
     fontWeight: '600',
   },
   name: {
     flex: 1,
-    fontSize: 15,
-    color: '#222',
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#FFFFFF',
   },
   badge: {
-    backgroundColor: '#1a73e8',
-    borderRadius: 4,
-    paddingHorizontal: 5,
-    paddingVertical: 2,
-    marginRight: 8,
+    backgroundColor: '#0F766E',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 6,
+    marginHorizontal: 8,
   },
   badgeText: {
-    color: '#fff',
-    fontSize: 10,
+    color: '#FFFFFF',
+    fontSize: 12,
     fontWeight: '700',
+    letterSpacing: 0.5,
   },
   stats: {
     alignItems: 'flex-end',
   },
   territories: {
-    fontSize: 15,
-    fontWeight: 'bold',
-    color: '#222',
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#FFFFFF',
   },
   km: {
-    fontSize: 12,
-    color: '#888',
+    fontSize: 13,
+    fontWeight: '400',
+    color: '#9CA3AF',
     marginTop: 2,
   },
 });
