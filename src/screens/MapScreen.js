@@ -140,6 +140,10 @@ export default function MapScreen() {
     const paceSecPerKm = (elapsedMs / 1000) / (distanceMeters / 1000);
     const userRef = doc(db, 'users', auth.currentUser.uid);
     try {
+      const lastRecorded = runPath[runPath.length - 1];
+      const finalPath = (location && haversineMeters(lastRecorded, { lat: location.lat, lng: location.lng }) > 1)
+        ? [...runPath, { lat: location.lat, lng: location.lng, t: Date.now() }]
+        : runPath;
       await addDoc(collection(db, 'runs'), {
         userId: auth.currentUser.uid,
         distance: distanceMeters,
@@ -156,21 +160,21 @@ export default function MapScreen() {
       } catch (e) {
         console.warn('Failed to update user counters:', e);
       }
-      const first = runPath[0];
-      const last = runPath[runPath.length - 1];
-      if (haversineMeters(first, last) <= 20 && runPath.length >= 3 && distanceMeters >= 100) {
+      const first = finalPath[0];
+      const last = finalPath[finalPath.length - 1];
+      if (haversineMeters(first, last) <= 20 && finalPath.length >= 3 && distanceMeters >= 100) {
         try {
-          const area = polygonAreaMeters(runPath);
+          const area = polygonAreaMeters(finalPath);
           await addDoc(collection(db, 'territories'), {
             userId: auth.currentUser.uid,
-            polygon: runPath.map(p => ({ lat: p.lat, lng: p.lng })),
+            polygon: finalPath.map(p => ({ lat: p.lat, lng: p.lng })),
             area,
             createdAt: serverTimestamp(),
           });
           await updateDoc(userRef, {
             territories: increment(1),
           });
-          const newPoly = toTurfPolygon(runPath.map(p => ({ lat: p.lat, lng: p.lng })));
+          const newPoly = toTurfPolygon(finalPath.map(p => ({ lat: p.lat, lng: p.lng })));
           const stolenList = [];
           for (const other of otherTerritories) {
             try {
