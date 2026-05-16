@@ -10,7 +10,7 @@ import { initializeFirestore } from 'firebase/firestore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyB0QsmX5yNvXhFyiI8hSBB3LYJTGsQPCdU",
+  apiKey: "AIzaSyAOWh6SJckjOWjt5x8gXHS4R4bINr9LbGY",
   authDomain: "paceland-v2.firebaseapp.com",
   projectId: "paceland-v2",
   storageBucket: "paceland-v2.firebasestorage.app",
